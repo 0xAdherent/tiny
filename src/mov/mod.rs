@@ -130,20 +130,12 @@ pub async fn get_total_gas_balance(
     Ok(total_balance)
 }
 
-pub fn pack_params_v3(
-    center_registry: &String,
-    navi_aggregator_cap: &String,
-    navi_aggregator: &String,
+pub fn pack_params(
     oracle_cap: &String,
     price_oracle: &String,
-    clock: &String,
     pool_ids: &Vec<u8>,
     token_prices: &Vec<u64>,
 ) -> Result<Vec<SuiJsonValue>> {
-    let center_registry = ObjectID::from_hex_literal(center_registry)?;
-    let navi_aggregator_cap = ObjectID::from_hex_literal(navi_aggregator_cap)?;
-    let navi_aggregator = ObjectID::from_hex_literal(navi_aggregator)?;
-
     let oracle_cap = ObjectID::from_hex_literal(oracle_cap)?;
     let price_oracle = ObjectID::from_hex_literal(price_oracle)?;
     let clock = ObjectID::from_hex_literal(clock)?;
@@ -174,9 +166,6 @@ pub fn pack_params_v3(
     let tss_bytes = tss_val.simple_serialize().unwrap();
 
     Ok(vec![
-        SuiJsonValue::from_object_id(center_registry),
-        SuiJsonValue::from_object_id(navi_aggregator_cap),
-        SuiJsonValue::from_object_id(navi_aggregator),
         SuiJsonValue::from_object_id(oracle_cap),
         SuiJsonValue::from_object_id(price_oracle),
         SuiJsonValue::from_object_id(clock),
@@ -188,67 +177,6 @@ pub fn pack_params_v3(
         SuiJsonValue::from_bcs_bytes(
             Some(&MoveTypeLayout::Vector(Box::new(MoveTypeLayout::U64))),
             &tss_bytes,
-        )?,
-    ])
-}
-
-pub fn pack_params_v2(
-    oracle_cap: &String,
-    price_oracle: &String,
-    pool_ids: &Vec<u8>,
-    token_prices: &Vec<u64>,
-) -> Result<Vec<SuiJsonValue>> {
-    let oracle_cap = ObjectID::from_hex_literal(oracle_cap)?;
-    let price_oracle = ObjectID::from_hex_literal(price_oracle)?;
-
-    let id_len = pool_ids.len();
-    let price_len = token_prices.len();
-    if id_len != price_len {
-        return Err(anyhow!("prices error"));
-    }
-
-    let mut idxs = Vec::new();
-    for i in 0..id_len {
-        idxs.push(MoveValue::U8(pool_ids[i]));
-    }
-    let json_idxs = json!(idxs);
-
-    let mut prices = Vec::new();
-    for i in 0..price_len {
-        prices.push(MoveValue::U256(token_prices[i].into()));
-    }
-    let prices_val = MoveValue::Vector(prices);
-    let prices_bytes = prices_val.simple_serialize().unwrap();
-
-    Ok(vec![
-        SuiJsonValue::from_object_id(oracle_cap),
-        SuiJsonValue::from_object_id(price_oracle),
-        SuiJsonValue::new(json_idxs)?,
-        SuiJsonValue::from_bcs_bytes(
-            Some(&MoveTypeLayout::Vector(Box::new(MoveTypeLayout::U256))),
-            &prices_bytes,
-        )?,
-    ])
-}
-
-pub fn pack_params(
-    oracle_cap: &String,
-    price_oracle: &String,
-    pool_id: u8,
-    token_price: &String,
-) -> Result<Vec<SuiJsonValue>> {
-    let oracle_cap = ObjectID::from_hex_literal(oracle_cap)?;
-    let price_oracle = ObjectID::from_hex_literal(price_oracle)?;
-
-    let token_price = U256::from_str_radix(token_price, 10)?;
-    let price_bytes = token_price.to_le_bytes();
-    Ok(vec![
-        SuiJsonValue::from_object_id(oracle_cap),
-        SuiJsonValue::from_object_id(price_oracle),
-        SuiJsonValue::new(pool_id.into())?,
-        SuiJsonValue::from_bcs_bytes(
-            Some(&MoveTypeLayout::U256),
-            &price_bytes,
         )?,
     ])
 }
