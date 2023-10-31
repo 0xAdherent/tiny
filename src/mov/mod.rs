@@ -138,7 +138,6 @@ pub fn pack_params(
 ) -> Result<Vec<SuiJsonValue>> {
     let oracle_cap = ObjectID::from_hex_literal(oracle_cap)?;
     let price_oracle = ObjectID::from_hex_literal(price_oracle)?;
-    let clock = ObjectID::from_hex_literal(clock)?;
 
     let id_len = pool_ids.len();
     let price_len = token_prices.len();
@@ -161,14 +160,12 @@ pub fn pack_params(
 
     let ts = misc::get_timestamp();
     let tss = vec![MoveValue::U64(ts); id_len];
-    //let json_tss = json!(tss);
     let tss_val = MoveValue::Vector(tss);
     let tss_bytes = tss_val.simple_serialize().unwrap();
 
     Ok(vec![
         SuiJsonValue::from_object_id(oracle_cap),
         SuiJsonValue::from_object_id(price_oracle),
-        SuiJsonValue::from_object_id(clock),
         SuiJsonValue::new(json_idxs)?,
         SuiJsonValue::from_bcs_bytes(
             Some(&MoveTypeLayout::Vector(Box::new(MoveTypeLayout::U256))),
