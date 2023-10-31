@@ -36,9 +36,9 @@ mod request;
 mod storage;
 
 pub const EXCHANGE_SIZE: usize = 20;
-pub const ORACLE_MODULE: &str = "adaptor";
-pub const ORACLE_FEED_FUNCTION: &str = "set_center_price";
-pub const SINGLE_INSTANCE_ID: &str = "Navi Oracle Feeder";
+pub const ORACLE_MODULE: &str = "oracle";
+pub const ORACLE_FEED_FUNCTION: &str = "update_token_price_batch";
+pub const SINGLE_INSTANCE_ID: &str = "Tiny Oracle Feeder";
 
 lazy_static! {
     static ref CFG: Configuration =
@@ -376,21 +376,17 @@ async fn handle_price_messages(
             continue;
         }
 
-        let json_params_v3 = mov::pack_params_v3(
-            &CFG.center_registry,
-            &CFG.navi_aggregator_cap,
-            &CFG.navi_aggregator,
+        let json_params = mov::pack_params(
             &CFG.oracle_cap,
             &CFG.price_oracle,
-            &CFG.clock,
             &price.0,
             &price.1,
         )
         .unwrap();
 
-        if !send_tx(&mut wallet, json_params_v3.clone(), &price.1).await {
+        if !send_tx(&mut wallet, json_params.clone(), &price.1).await {
             let _ = wallet.set_client(get_nex_rpc());
-            send_tx(&mut wallet, json_params_v3, &price.1).await;
+            send_tx(&mut wallet, json_params, &price.1).await;
         }
     }
 }
@@ -407,7 +403,7 @@ async fn send_tx(
             &ORACLE_MODULE.to_string(),
             &ORACLE_FEED_FUNCTION.to_string(),
             CFG.gas_budget,
-            json_params_v3,
+            json_params,
         )
         .await
         {
@@ -425,7 +421,7 @@ async fn send_tx(
             &ORACLE_FEED_FUNCTION.to_string(),
             &CFG.gas,
             CFG.gas_budget,
-            json_params_v3,
+            json_params,
             &CFG.publickeys,
             &CFG.weights,
             CFG.threshold,
