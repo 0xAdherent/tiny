@@ -570,7 +570,7 @@ async fn _main(args: &Cli) -> Result<()> {
     }
 
     logger::init_logger(true, CFG.log_cfg);
-    info!("navid started");
+    info!("tinyd started");
 
     let (mut tx, rx) = broadcast::channel::<mail::Alarm>(100);
     tokio::task::spawn(handle_alarm_messages(rx));
@@ -621,7 +621,7 @@ async fn _main(args: &Cli) -> Result<()> {
         let mut price_vals = Vec::new();
 
         for i in 0..coins.len() {
-            if prices[i] == 0.0f64 {
+            if prices[i] <= 0.0f64 {
                 continue;
             }
 
